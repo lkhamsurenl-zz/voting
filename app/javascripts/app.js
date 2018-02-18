@@ -3,9 +3,9 @@ import "../stylesheets/app.css";
 
 // Import libraries we need.
 import { default as Web3} from 'web3';
-import { default as contract } from 'truffle-contract'
+import { default as contract } from 'truffle-contract';
 
-import voting_artifacts from '../../build/contracts/Voting.json'
+import voting_artifacts from '../../build/contracts/VotingFactory.json';
 
 // Contstants:
 var SEC_IN_MS = 1000;
@@ -15,13 +15,14 @@ var DAY_IN_MS = HR_IN_MS * 24;
 var MONTH_IN_MS = 30 * DAY_IN_MS;
 var GAS = 140000;
 
-var Voting = contract(voting_artifacts);
+var VotingFactory = contract(voting_artifacts);
 
 let endDate = new Date().getTime() + MONTH_IN_MS;
 let candidates = {}
+let voters = {}
 
 function populateCountdown() {
-  Voting.deployed().then(function(contractInstance) {
+  VotingFactory.deployed().then(function(contractInstance) {
     contractInstance.getEndTime.call().then(function(date) {
       endDate = new Date(parseInt(date.toString()) * 1000);
     })
@@ -43,27 +44,31 @@ function updateCountdown() {
 var x = setInterval(updateCountdown, 1000);
 
 window.voteForCandidate = function(candidate) {
-  var dropDownList = document.getElementById("dropdown-list");
-  var candidateName = dropDownList.options[dropDownList.selectedIndex].text;
+  var candidateDropDownList = document.getElementById("candidate-dropdown-list");
+  var candidateName = candidateDropDownList.options[candidateDropDownList.selectedIndex].text;
+
+  var voterDropDownList = document.getElementById("voter-dropdown-list");
+  var voterAddress = voterDropDownList.options[voterDropDownList.selectedIndex].text;
 
   try {
     $("#msg").html("Vote has been submitted. The vote count will increment as soon as the vote is recorded on the blockchain. Please wait.")
     $("#error-msg").html("");
 
-    /* Voting.deployed() returns an instance of the contract. Every call
+    /* VotingFactory.deployed() returns an instance of the contract. Every call
      * in Truffle returns a promise which is why we have used then()
      * everywhere we have a transaction call
      */
-    Voting.deployed().then(function(contractInstance) {
+    VotingFactory.deployed().then(function(contractInstance) {
       contractInstance.voteForCandidate(
         candidateName, 
-        { gas: GAS, from: web3.eth.accounts[0] }
+        { gas: GAS, from: voterAddress }
       ).then(function() {
-        let div_id = candidates[candidateName];
-        return contractInstance.totalVotesFor.call(candidateName).then(function(v) {
-          $("#" + div_id + "-vote").html(v.toString());
-          $("#msg").html("");
+        // Update voters information:
+        let voterDivId = voters[voterAddress];
+        contractInstance.totalVotesCasted({from: voterAddress}).then(function(v) {
+          $("#" + voterDivId).html(v.toString());
         });
+        $("#msg").html("");
       }).catch(function(err) {
         // if voting session has ended, show the message
         contractInstance.hasEnded.call().then(function(expired) {
@@ -74,6 +79,9 @@ window.voteForCandidate = function(candidate) {
                 " Smart contract will automatically release fund to the winner.");
             })
             $("#error-msg").html("Voting session has expired!");
+
+            // Reveal the votes:
+            populateCandidateVotes();
           } else {
             $("#error-msg").html("You have already casted a vote!");
           }
@@ -86,7 +94,7 @@ window.voteForCandidate = function(candidate) {
 }
 
 function populateCandidates() {
-  Voting.deployed().then(function(contractInstance) {
+  VotingFactory.deployed().then(function(contractInstance) {
     contractInstance.getCandidateList.call().then(function(candidateArray) {
       for(let i=0; i < candidateArray.length; i++) {
         /* We store the candidate names as bytes32 on the blockchain. We use the
@@ -95,9 +103,8 @@ function populateCandidates() {
         candidates[web3.toUtf8(candidateArray[i])] = "candidate-" + i;
       }
       setupCandidateRows();
-      setupDropdownList();
+      setupCandidateDropdownList();
       populateCandidateLinks();
-      populateCandidateVotes();
     });
   });
 }
@@ -112,10 +119,10 @@ function setupCandidateRows() {
   });
 }
 
-function setupDropdownList() {
+function setupCandidateDropdownList() {
   Object.keys(candidates).forEach(function (candidate) { 
     // <option value="volvo">Volvo XC90</option>
-    $("#dropdown-list").append("<option value='" + candidate + "'>" + candidate + "</option>");
+    $("#candidate-dropdown-list").append("<option value='" + candidate + "'>" + candidate + "</option>");
   });
 }
 
@@ -123,7 +130,7 @@ function populateCandidateLinks() {
   let candidateNames = Object.keys(candidates);
   for (var i = 0; i < candidateNames.length; i++) {
     let name = candidateNames[i];
-    Voting.deployed().then(function(contractInstance) {
+    VotingFactory.deployed().then(function(contractInstance) {
       contractInstance.getCandidateSubmissionLink.call(name).then(function(v) {
         let link = "<a href='https://www.youtube.com/watch?v=" + v.toString() + "'>link</a>";
         $("#" + candidates[name] + "-link").html(link);
@@ -136,12 +143,57 @@ function populateCandidateVotes() {
   let candidateNames = Object.keys(candidates);
   for (var i = 0; i < candidateNames.length; i++) {
     let name = candidateNames[i];
-    Voting.deployed().then(function(contractInstance) {
+    VotingFactory.deployed().then(function(contractInstance) {
       contractInstance.totalVotesFor.call(name).then(function(v) {
-        $("#" + candidates[name] + "-vote").html(v.toString());
+        let voteDivId = candidates[name] + "-vote";
+        $("#" + voteDivId).html(v.toString());
       });
     });
   }
+}
+
+/*
+* Voter information population
+*/
+function populateVoters() {
+  //TODO(LJ): Eventually all voters will be read from Smart contract init.
+  for (var i = 0; i < web3.eth.accounts.length; i++) {
+    let address = web3.eth.accounts[i];
+    voters[address] = "voter-" + i.toString();
+  }
+  setupVoterRows();
+  setupVoterDropdownList();
+  populateVoterCounts();
+}
+
+// Construct html of candidate rows with their information. 
+function setupVoterRows() {
+  Object.keys(voters).forEach(function (voterAddress) { 
+    let nameTd = "<td>" + voterAddress + "</td>"
+    let voteTd = "<td id='" + voters[voterAddress] + "'></td>"
+    $("#voter-rows").append("<tr>" + nameTd + voteTd + "</tr>");
+  });
+}
+
+function setupVoterDropdownList() {
+  Object.keys(voters).forEach(function (voterAddress) { 
+    $("#voter-dropdown-list").append("<option value='" + voterAddress + "'>" + voterAddress + "</option>");
+  });
+}
+
+function populateVoterCounts() {
+  Object.keys(voters).forEach(function(voterAddress) {
+    console.log("address is: " + voterAddress);
+    VotingFactory.deployed().then(function(contractInstance) {
+      contractInstance.totalVotesCasted({ from: voterAddress })
+      .then(function(voteCount) {
+        $("#" + voters[voterAddress]).html(voteCount.toString());
+      })
+      .catch(function(err) {
+        console.log("Error in getting voting counts: " + err);
+      });
+    });
+  }); 
 }
 
 $( document ).ready(function() {
@@ -155,8 +207,9 @@ $( document ).ready(function() {
     window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
   }
 
-  Voting.setProvider(web3.currentProvider);
+  VotingFactory.setProvider(web3.currentProvider);
   populateCountdown();
+  populateVoters();
   populateCandidates();
 
 });

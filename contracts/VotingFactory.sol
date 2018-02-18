@@ -4,7 +4,8 @@ import './Finalizable.sol';
 import './StringConversionHelper.sol';
 
 // TODO(LJ): add inheritance from submission contract.
-contract Voting is Finalizable, StringConversionHelper {
+contract VotingFactory is Finalizable, StringConversionHelper {
+
 	// candidateId => totalVote.  
 	mapping (bytes32 => uint8) public votesReceived;
 
@@ -21,7 +22,7 @@ contract Voting is Finalizable, StringConversionHelper {
 	* TODO(LJ): Get list of candidates from Forest's candidates list
 	* contract.
 	*/
-	function Voting(bytes32[] _ids, bytes32[] _links, uint256 _startTime, uint256 _endTime) public {
+	function VotingFactory(bytes32[] _ids, bytes32[] _links, uint256 _startTime, uint256 _endTime) public {
 		require(_startTime <= _endTime);
 		startTime = _startTime;
 		endTime = _endTime;
@@ -58,7 +59,7 @@ contract Voting is Finalizable, StringConversionHelper {
 		return _bytes32ToString(candidateLinks[_id]);
 	}
 
-	function totalVotesCasted() view public onlyOwner returns (uint8) {
+	function totalVotesCasted() view public returns (uint8) {
 		return votesCasted[msg.sender];
 	}
 

@@ -1,9 +1,9 @@
-var Voting = artifacts.require("./Voting.sol");
+var Voting = artifacts.require("./VotingFactory.sol");
 module.exports = function(deployer) {
 	// TODO(LJ): Eventually should be reading from Forest's contract.
 	let startDate = Math.floor(Date.now() / 1000);
 	// expire in a minute.
-	let endDate = Math.floor(Date.now() / 1000) + 60;
+	let endDate = Math.floor(Date.now() / 1000) + 30;
 
   deployer.deploy(
   	Voting, 

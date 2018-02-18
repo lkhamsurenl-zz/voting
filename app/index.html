@@ -25,7 +25,8 @@
     </div>
 
     <form onsubmit="return voteForCandidate()">
-      <select id="dropdown-list"></select>
+      <select id="voter-dropdown-list"></select>
+      <select id="candidate-dropdown-list"></select>
       <input id="candidate" type="submit"/> 
     </form>
 
@@ -40,6 +41,19 @@
     <div class="row">
       <h2>Voting Countdown</h2>
       <p id="countdown"></p>
+    </div>
+
+    <div class="row">
+      <h2>Voters information</h2>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Voter</th>
+              <th>Votes</th>
+            </tr>
+          </thead>
+          <tbody id="voter-rows"></tbody>
+      </table>
     </div>
   </div>
 </body>
