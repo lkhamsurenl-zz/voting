@@ -43,11 +43,12 @@ function updateCountdown() {
 var x = setInterval(updateCountdown, 1000);
 
 window.voteForCandidate = function(candidate) {
-  let candidateName = $("#candidate").val();
+  var dropDownList = document.getElementById("dropdown-list");
+  var candidateName = dropDownList.options[dropDownList.selectedIndex].text;
+
   try {
     $("#msg").html("Vote has been submitted. The vote count will increment as soon as the vote is recorded on the blockchain. Please wait.")
     $("#error-msg").html("");
-    $("#candidate").val("");
 
     /* Voting.deployed() returns an instance of the contract. Every call
      * in Truffle returns a promise which is why we have used then()
@@ -69,7 +70,7 @@ window.voteForCandidate = function(candidate) {
           if (expired) {
             // Finalize the voting process.
             contractInstance.getWinner.call().then(function(winnerId) {
-              $("#msg").html("Voting has finished. " + winnerId.toString() + " won!" +
+              $("#winner").html("Voting has finished. " + winnerId.toString() + " won!" +
                 " Smart contract will automatically release fund to the winner.");
             })
             $("#error-msg").html("Voting session has expired!");
@@ -94,6 +95,7 @@ function populateCandidates() {
         candidates[web3.toUtf8(candidateArray[i])] = "candidate-" + i;
       }
       setupCandidateRows();
+      setupDropdownList();
       populateCandidateLinks();
       populateCandidateVotes();
     });
@@ -107,6 +109,13 @@ function setupCandidateRows() {
     let linkTd = "<td id='" + candidates[candidate] + "-link'></td>"
     let voteTd = "<td id='" + candidates[candidate] + "-vote'></td>"
     $("#candidate-rows").append("<tr>" + nameTd + linkTd + voteTd + "</tr>");
+  });
+}
+
+function setupDropdownList() {
+  Object.keys(candidates).forEach(function (candidate) { 
+    // <option value="volvo">Volvo XC90</option>
+    $("#dropdown-list").append("<option value='" + candidate + "'>" + candidate + "</option>");
   });
 }
 

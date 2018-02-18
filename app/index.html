@@ -22,12 +22,19 @@
         </thead>
         <tbody id="candidate-rows"></tbody>
       </table>
-      <div id="msg"></div>
-      <div id="error-msg"></div>
     </div>
 
-    <input type="text" id="candidate" />
-    <a href="#" onclick="voteForCandidate()" class="btn btn-primary">Vote</a>
+    <form onsubmit="return voteForCandidate()">
+      <select id="dropdown-list"></select>
+      <input id="candidate" type="submit"/> 
+    </form>
+
+    <div>
+      <div id="msg"></div>
+      <div id="error-msg"></div>
+      <div id="winner"></div>
+    </div>
+
   </div>
   <div class="col-sm-offset-1 col-sm-4 margin-top-3">
     <div class="row">
