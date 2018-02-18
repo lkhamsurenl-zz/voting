@@ -14,7 +14,7 @@ contract VotingFactory is Finalizable, StringConversionHelper {
 
 	mapping (bytes32 => bytes32) public candidateLinks;
 
-	/* List of people who can vote on the blockchain for a given SC */
+	/* List of people who can vote on the blockchain for a given SmartContract */
 	bytes32[] public candidateList; 
 
 	/*
