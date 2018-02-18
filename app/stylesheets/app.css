@@ -61,3 +61,17 @@ h3 {
   font-size: 25px;
   color: #AAA;
 }
+
+#candidate {
+  width: 100px;
+}
+
+#error-msg {
+  font-size: 20px;
+  color: #f4427d;
+}
+
+#winner-name {
+  font-size: 15px;
+  color: #42f4c5;
+}
