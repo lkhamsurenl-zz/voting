@@ -3,7 +3,7 @@
 This is a relatively simple dApp built on top of [Truffle](http://truffleframework.com/)
 and [OpenZeppelin](https://openzeppelin.org).
 
-![Screenshot](screenshot.png)
+![Demo](demo.gif)
 
 ## Installation
 
