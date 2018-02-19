@@ -56,7 +56,7 @@ contract VotingFactory is Finalizable, StringConversionHelper {
 	function getCandidateSubmissionLink(bytes32 _id) view public onlyOwner returns (string) {
 		// Ensure candidate is legit.
 		require(_validCandidate(_id));
-		return _bytes32ToString(candidateLinks[_id]);
+		return bytes32ToString(candidateLinks[_id]);
 	}
 
 	function totalVotesCasted() view public returns (uint8) {
@@ -87,6 +87,6 @@ contract VotingFactory is Finalizable, StringConversionHelper {
 			}
 		}
 
-		return _bytes32ToString(winnerId);
+		return bytes32ToString(winnerId);
 	}
 }
