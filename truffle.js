@@ -7,7 +7,8 @@ module.exports = {
       host: '127.0.0.1',
       port: 8545,
       network_id: '*', // Match any network id
-      gas: 470000
+      // Higher gas is needed for running tests (6700000)
+      gas: 6700000
     }
   }
 }

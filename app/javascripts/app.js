@@ -183,7 +183,6 @@ function setupVoterDropdownList() {
 
 function populateVoterCounts() {
   Object.keys(voters).forEach(function(voterAddress) {
-    console.log("address is: " + voterAddress);
     VotingFactory.deployed().then(function(contractInstance) {
       contractInstance.totalVotesCasted({ from: voterAddress })
       .then(function(voteCount) {
